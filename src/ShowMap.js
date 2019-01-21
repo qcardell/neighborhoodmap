@@ -36,13 +36,14 @@ class ContactBody extends React.Component {
   componentDidMount() {
     // Once the Google Maps API has finished loading, initialize the map
     this.getGoogleMaps().then((google) => {
-      const uluru = {lat: 40.7413549, lng: -73.9980244};
+      const center = {lat: 40.7413549, lng: -73.9980244};
       const map = new google.maps.Map(document.getElementById('map'), {
         zoom: 13,
-        center: uluru
+        center: center,
+		mapTypeControl: false
       });
       const marker = new google.maps.Marker({
-        position: uluru,
+        position: center,
         map: map
       });
     });
