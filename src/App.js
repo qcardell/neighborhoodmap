@@ -20,7 +20,8 @@ var locations = [
 
 var markers = [];
 var itemlocations = [];
-
+var map ;
+var center;
 
 
 class App extends Component {
@@ -71,7 +72,7 @@ class App extends Component {
 			this.setState({
 				items: res.response.venues
 			});
-			console.log(this.state);
+			//console.log(this.state);
 		})
 		//console.log(this.state.items);
 	}
@@ -94,13 +95,20 @@ class App extends Component {
 
 		};
 		//this.setState({query: query.trim()})
-		
+		//console.log(markers);
+		for (var i=0; i<markers.length; i++){
+				markers[i].setMap(null);
+		}
+		markers = [];
 		foursquare.venues.getVenues(params).then((res) => {
-			//this.setState({
-			//	items: res.response.venues
-			//});
+			this.setState({
+				items: res.response.venues
+			},this.rendermap()
+			)
 			console.log(this.state.items);
 		})
+		
+		
 	}
 	
 	
@@ -158,15 +166,14 @@ class App extends Component {
 		foursquare.venues.getVenues(params).then((res) => {
 			this.setState({
 				items: res.response.venues
-			}, this.rendermap()
+			}, this.rendermapOnly()
 			);
-			console.log(this.state);
+			//console.log(this.state);
 		})
 
 	}
 	
-	rendermap(){
-		    // Once the Google Maps API has finished loading, initialize the map
+	rendermapOnly(){
 		this.getGoogleMaps().then((google) => {
 			var styles =[
 				{
@@ -209,15 +216,73 @@ class App extends Component {
 					]
 				}
 			]
-			const center = {lat: 37.7749, lng: -122.4194};
+			center = {lat: 37.7749, lng: -122.4194};
 				//const center = {lat: 40.7413549, lng: -73.9980244};
 				//37.7749,-122.4194"
-			const map = new google.maps.Map(document.getElementById('map'), {
+			this.map = new google.maps.Map(document.getElementById('map'), {
 				zoom: 13,
 				center: center,
 				//styles: styles,
 				mapTypeControl: false
 			});
+		})
+		this.rendermap();
+	}
+	
+	
+	rendermap(){
+		// Once the Google Maps API has finished loading, initialize the map
+		this.getGoogleMaps().then((google) => {
+			var styles =[
+				{
+					featureType: 'water',
+					stylers: [
+						{color: '#19a0d8'}
+					]
+				},{
+					featureType: 'administrative',
+					elementType: 'labels.text.stroke',
+					stylers: [
+						{color: '#ffffff'},
+						{weight: 6}
+					]
+				},{
+					featureType: 'road.highway',
+					elementType: 'geometry.stroke',
+					stylers: [
+						{color: '#efe9e4'},
+						{lightness: -40 }				
+					]
+				},{
+					featureType: 'transit.station',
+					stylers: [
+						{weight: 9},
+						{hue: '#e85113' }
+					]
+				},{
+					featureType: 'road.highway',
+					elementType: 'labels.icon',
+					stylers: [
+					{visibility: 'off'}
+					]
+				},{
+					featureType: 'road.highway',
+					elementType: 'geometry.fill',
+					stylers: [
+						{color: '#efe9e4'},
+						{lightness: -25}
+					]
+				}
+			]
+			//const center = {lat: 37.7749, lng: -122.4194};
+				//const center = {lat: 40.7413549, lng: -73.9980244};
+				//37.7749,-122.4194"
+			//const map = new google.maps.Map(document.getElementById('map'), {
+			//	zoom: 13,
+			//	center: center,
+				//styles: styles,
+			//	mapTypeControl: false
+			//});
 	  
 			var largeInfowindow = new google.maps.InfoWindow();
 		
@@ -238,7 +303,7 @@ class App extends Component {
 				//var position = locations[i].location;
 				var position = {lat: venue.location.lat,lng:venue.location.lng};
 
-				var title = venue.name; //locations[i].title;
+				var title = venue.name +"_Q"; //locations[i].title;
 				
 				var marker = new google.maps.Marker({
 					position: position,
@@ -246,7 +311,7 @@ class App extends Component {
 					icon: defaultIcon,
 					animation: google.maps.Animation.DROP,
 					id: venue.id,
-					map:map
+					map:this.map
 				});
 			
 				markers.push(marker);
@@ -271,7 +336,7 @@ class App extends Component {
 					infowindow.marker = marker;
 					
 					infowindow.addListener('closeclick', function(){
-						infowindow.setMarker(null);
+						//infowindow.setMarker(null);
 					});
 					var streetViewService = new google.maps.StreetViewService();
 					var radius = 50;
@@ -323,6 +388,11 @@ class App extends Component {
 		});
 		
 	}
+	
+	showMarkers(){
+
+	}
+	
 	
 	render() {
 		return (
