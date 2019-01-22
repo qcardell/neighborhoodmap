@@ -115,10 +115,15 @@ class App extends Component {
 	foursquare.venues.getVenues(params).then((res) => {
 		this.setState({
 			items: res.response.venues
-		});
+		}, this.rendermap()
+		);
 		console.log(this.state);
 	})
-    // Once the Google Maps API has finished loading, initialize the map
+
+  }
+	
+	rendermap(){
+		    // Once the Google Maps API has finished loading, initialize the map
     this.getGoogleMaps().then((google) => {
 		var styles =[
 			{
@@ -183,16 +188,21 @@ class App extends Component {
 		//});
 		
 		//var bounds = new google.maps.LatLngBounds();
-		for (var i=0; i < locations.length; i++) {
-			var position = locations[i].location;
-			var title = locations[i].title;
+		console.log(this.state.items);
+		this.state.items.map(venue => {
+		//for (var i=0; i < locations.length; i++) {
+			//location: {lat: 40.7713024, lng: -73.9632393}
+			//var position = locations[i].location;
+			var position = {lat: venue.location.lat,lng:venue.location.lng};
+
+			var title = venue.name; //locations[i].title;
 			
 			var marker = new google.maps.Marker({
 				position: position,
 				title: title,
 				icon: defaultIcon,
 				animation: google.maps.Animation.DROP,
-				id: i,
+				id: venue.id,
 				map:map
 			});
 		
@@ -210,7 +220,7 @@ class App extends Component {
 			marker.addListener('mouseout', function(){
 				this.setIcon(defaultIcon);
 			});
-		}
+		})
 		
 		
 		
@@ -269,8 +279,8 @@ class App extends Component {
 			return markerImage;
 		}
     });
-  }
-	
+		
+	}
 	
   render() {
     return (
