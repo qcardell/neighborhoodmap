@@ -68,7 +68,7 @@ h1 {
     width: 70%;
 }
 	
-#show-listings{
+#show-listings, #lng, #lat{
     width: 30%;
 }
 	  

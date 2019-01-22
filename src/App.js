@@ -23,7 +23,6 @@ var itemlocations = [];
 var map ;
 var center;
 
-
 class App extends Component {
 	constructor(props) {
 		super(props);
@@ -83,7 +82,7 @@ class App extends Component {
 			//clientID: '00BVPJHFDPUKMUOTIEO4IGK53GUPTYTMVIMUEKHBIIX3DSZO',
 			//clientSecret: 'IKB3WGDPXTVPMEUFWZB1GFHHULK0JE3VTGYG1OYMVRO3LNSK',
 			"ll": "37.7749,-122.4194",
-			"query": {query},
+			"query": query,
 			// v: "20180323",
 			//"near": "Dallas, Tx"
 	
@@ -95,7 +94,7 @@ class App extends Component {
 
 		};
 		//this.setState({query: query.trim()})
-		//console.log(markers);
+		console.log(params);
 		for (var i=0; i<markers.length; i++){
 				markers[i].setMap(null);
 		}
@@ -105,7 +104,7 @@ class App extends Component {
 				items: res.response.venues
 			},this.rendermap()
 			)
-			console.log(this.state.items);
+			//console.log(this.state.items);
 		})
 		
 		
@@ -151,7 +150,7 @@ class App extends Component {
 			//clientID: '00BVPJHFDPUKMUOTIEO4IGK53GUPTYTMVIMUEKHBIIX3DSZO',
 			//clientSecret: 'IKB3WGDPXTVPMEUFWZB1GFHHULK0JE3VTGYG1OYMVRO3LNSK',
 			"ll": "37.7749,-122.4194",
-			"query": 'food',
+			"query": '',
 			// v: "20180323",
 			//"near": "Dallas, Tx"
 			
@@ -393,7 +392,6 @@ class App extends Component {
 
 	}
 	
-	
 	render() {
 		return (
 			<div className="App">
@@ -417,11 +415,16 @@ class App extends Component {
 					</div>
 					<div>
 						<span>Lat: </span>
-						<input id="show-listings" type="input" ></input>
+						<input id="lat" type="input" ></input>
 						<span>  Lng: </span>
-						<input id="show-listings" type="input" ></input>
+						<input id="lng" type="input" ></input>
 					</div>
 				</div>
+					<div className='options-box'>
+						<ul>
+							<li> test </li>
+						</ul>
+					</div>
 				<div id='map'></div>
 			</div>
 		);
