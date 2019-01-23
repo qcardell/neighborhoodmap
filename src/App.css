@@ -85,6 +85,7 @@ hr {
     left: 362px;
     position: absolute;
     right: 0px;
+	width: 75%;
 }
 	  
 .options-box {
@@ -130,6 +131,6 @@ hr {
 .list{
 	overflow:hidden; 
 	overflow-y:scroll;
-	height:300px;
+	height:65vh;
 	padding-left: 0px;
 }
