@@ -10,6 +10,9 @@ var foursquare = require('react-foursquare')({
 var markers = [];
 var map ;
 var center;
+var marker;
+var google;
+var largeInfowindow;
 
 class App extends Component {
 	constructor(props) {
@@ -105,7 +108,7 @@ class App extends Component {
 		  this.googleMapsPromise = new Promise((resolve) => {
 			// Add a global handler for when the API finishes loading
 			window.resolveGoogleMapsPromise = () => {
-				const google = window.google;
+				google = window.google;
 			  // Resolve the promise
 			  resolve(google);
 
@@ -231,7 +234,7 @@ class App extends Component {
 			//	mapTypeControl: false
 			//});
 	  
-			var largeInfowindow = new google.maps.InfoWindow();
+			largeInfowindow = new google.maps.InfoWindow();
 		
 			var defaultIcon = makeMarkerIcon('0091ff');
 		
@@ -252,7 +255,7 @@ class App extends Component {
 
 				var title = venue.name; //locations[i].title;
 				
-				var marker = new google.maps.Marker({
+				marker = new google.maps.Marker({
 					position: position,
 					title: title,
 					icon: defaultIcon,
@@ -265,6 +268,7 @@ class App extends Component {
 				
 				//bounds.extend(marker.position);
 				
+				
 				marker.addListener('click', function() {
 					populateInfoWindow(this, largeInfowindow);
 				});
@@ -276,9 +280,12 @@ class App extends Component {
 					this.setIcon(defaultIcon);
 				});
 			})
-		
+			
+			
 			function populateInfoWindow(marker, infowindow) {
-				if (infowindow.marker !== marker) {
+				//console.log(marker);
+				//console.log(infowindow);
+				//if (infowindow.marker !== marker) {
 					infowindow.setContent('');
 					infowindow.marker = marker;
 					
@@ -319,7 +326,7 @@ class App extends Component {
 						streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
 						
 						infowindow.open(map, marker);
-				}
+				//}
 			}
 		
 			function makeMarkerIcon(markerColor){
@@ -336,8 +343,58 @@ class App extends Component {
 		
 	}
 	
-	showMarkers(){
-
+	onPress(event){
+		//console.log(event);
+		//console.log(this.populateInfoWindow);
+		var displaymarker = markers.filter((venue) => venue.id === event.id);
+		//this.state.items.map((venue) =>(
+		//console.log(displaymarker);
+		this.populateInfoWindow(displaymarker[0],largeInfowindow);
+	}
+	
+	populateInfoWindow(marker, infowindow) {
+				//if (infowindow.marker !== marker) {
+					infowindow.setContent('');
+					infowindow.marker = marker;
+					
+					infowindow.addListener('closeclick', function(){
+						//infowindow.setMarker(null);
+					});
+					var streetViewService = new google.maps.StreetViewService();
+					var radius = 50;
+					
+					
+					
+					function getStreetView(data, status){
+						//console.log();
+						if (status === google.maps.StreetViewStatus.OK){
+							var nearStreetViewLocation = data.location.latLng;
+							var heading = google.maps.geometry.spherical.computeHeading(
+								nearStreetViewLocation, marker.position);
+							//console.log(heading);
+							infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
+							//console.log(infowindow);
+							var panoramaOptions = {
+								position: nearStreetViewLocation,
+								pov: {
+									heading: heading,
+									pitch: 30
+								}
+							};
+							var panorama = new google.maps.StreetViewPanorama(
+								document.getElementById('pano'), panoramaOptions);
+								//console.log(panorama);
+							}else {
+								//console.log(marker);
+								infowindow.setContent('<div>' + marker.title + '</div>' +
+								'<div>No Street View Found</div>');
+							}
+						}
+						
+						streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
+						
+						infowindow.open(map, marker);
+				//}
 	}
 
 	render() {
@@ -369,12 +426,11 @@ class App extends Component {
 					</div>
 				</div>
 					<div className='venue-box'>
-											<h3>Places</h3>
-
+						<h3>Places</h3>
 						<ul className='list'>
 						{this.state.items.map((venue) =>(
 							<div key={venue.id}>
-							<li className='venue-list'>
+							<li className='venue-list' onClick={() => this.onPress(venue)}>
 							<h4>{venue.name}</h4>
 							<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
 							</li>
