@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './App.css';
-import ReactDOM from 'react-dom';
 //import ShowMap from './ShowMap';
 import axios from 'axios'; // ajax stuff similar to jquery but with promises
 
@@ -8,18 +7,7 @@ var foursquare = require('react-foursquare')({
   clientID: '00BVPJHFDPUKMUOTIEO4IGK53GUPTYTMVIMUEKHBIIX3DSZO',
   clientSecret: 'IKB3WGDPXTVPMEUFWZB1GFHHULK0JE3VTGYG1OYMVRO3LNSK'  
 });
-
-var locations = [
-	{title: 'Park Ave Penthouse', location: {lat: 40.7713024, lng: -73.9632393}},
-	{title: 'Chelsea Loft', location: {lat: 40.7444883, lng: -73.9949465}},
-	{title: 'Union Square Open Floor Plan', location: {lat: 40.7347062, lng: -73.9895759}},
-	{title: 'East Village Hip Studio', location: {lat: 40.7281777, lng: -73.984377}},
-	{title: 'TriBeCa Artsy Bachelor Pad', location: {lat: 40.7195264, lng: -74.0089934}},
-	{title: 'Chinatown Homey Space', location: {lat: 40.7180628, lng: -73.9961237}}
-];
-
 var markers = [];
-var itemlocations = [];
 var map ;
 var center;
 
@@ -167,7 +155,7 @@ class App extends Component {
 				items: res.response.venues
 			}, this.rendermapOnly()
 			);
-			//console.log(this.state);
+			console.log(this.state.items);
 		})
 
 	}
@@ -232,47 +220,7 @@ class App extends Component {
 	rendermap(){
 		// Once the Google Maps API has finished loading, initialize the map
 		this.getGoogleMaps().then((google) => {
-			var styles =[
-				{
-					featureType: 'water',
-					stylers: [
-						{color: '#19a0d8'}
-					]
-				},{
-					featureType: 'administrative',
-					elementType: 'labels.text.stroke',
-					stylers: [
-						{color: '#ffffff'},
-						{weight: 6}
-					]
-				},{
-					featureType: 'road.highway',
-					elementType: 'geometry.stroke',
-					stylers: [
-						{color: '#efe9e4'},
-						{lightness: -40 }				
-					]
-				},{
-					featureType: 'transit.station',
-					stylers: [
-						{weight: 9},
-						{hue: '#e85113' }
-					]
-				},{
-					featureType: 'road.highway',
-					elementType: 'labels.icon',
-					stylers: [
-					{visibility: 'off'}
-					]
-				},{
-					featureType: 'road.highway',
-					elementType: 'geometry.fill',
-					stylers: [
-						{color: '#efe9e4'},
-						{lightness: -25}
-					]
-				}
-			]
+			
 			//const center = {lat: 37.7749, lng: -122.4194};
 				//const center = {lat: 40.7413549, lng: -73.9980244};
 				//37.7749,-122.4194"
@@ -302,7 +250,7 @@ class App extends Component {
 				//var position = locations[i].location;
 				var position = {lat: venue.location.lat,lng:venue.location.lng};
 
-				var title = venue.name +"_Q"; //locations[i].title;
+				var title = venue.name; //locations[i].title;
 				
 				var marker = new google.maps.Marker({
 					position: position,
@@ -330,7 +278,7 @@ class App extends Component {
 			})
 		
 			function populateInfoWindow(marker, infowindow) {
-				if (infowindow.marker != marker) {
+				if (infowindow.marker !== marker) {
 					infowindow.setContent('');
 					infowindow.marker = marker;
 					
@@ -344,7 +292,7 @@ class App extends Component {
 					
 					function getStreetView(data, status){
 						//console.log();
-						if (status == google.maps.StreetViewStatus.OK){
+						if (status === google.maps.StreetViewStatus.OK){
 							var nearStreetViewLocation = data.location.latLng;
 							var heading = google.maps.geometry.spherical.computeHeading(
 								nearStreetViewLocation, marker.position);
@@ -391,7 +339,7 @@ class App extends Component {
 	showMarkers(){
 
 	}
-	
+
 	render() {
 		return (
 			<div className="App">
@@ -420,10 +368,20 @@ class App extends Component {
 						<input id="lng" type="input" ></input>
 					</div>
 				</div>
-					<div className='options-box'>
-						<ul>
-							<li> test </li>
+					<div className='venue-box'>
+											<h3>Places</h3>
+
+						<ul className='list'>
+						{this.state.items.map((venue) =>(
+							<div key={venue.id}>
+							<li className='venue-list'>
+							<h4>{venue.name}</h4>
+							<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
+							</li>
+							</div>
+						))}
 						</ul>
+
 					</div>
 				<div id='map'></div>
 			</div>
