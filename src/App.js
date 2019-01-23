@@ -17,6 +17,7 @@ var largeInfowindow;
 class App extends Component {
 	constructor(props) {
 		super(props);
+				this.onPress= this.onPress.bind(this);
 		this.state = {
 			items: []
 		};
@@ -158,7 +159,7 @@ class App extends Component {
 				items: res.response.venues
 			}, this.rendermapOnly()
 			);
-			console.log(this.state.items);
+			//console.log(this.state.items);
 		})
 
 	}
@@ -261,6 +262,7 @@ class App extends Component {
 					icon: defaultIcon,
 					animation: google.maps.Animation.DROP,
 					id: venue.id,
+					address: venue.location.formattedAddress[0] +  " " + venue.location.formattedAddress[1],
 					map:this.map
 				});
 			
@@ -303,8 +305,10 @@ class App extends Component {
 							var nearStreetViewLocation = data.location.latLng;
 							var heading = google.maps.geometry.spherical.computeHeading(
 								nearStreetViewLocation, marker.position);
-							//console.log(heading);
-							infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
+							//console.log(markers);
+							//var displayvenue = markers.filter((venue) => venue.id === marker.id);
+							//console.log(displayvenue);
+							infowindow.setContent('<div>' + marker.title +'</div>'+ marker.address+'<div id="pano"></div>');
 							//console.log(infowindow);
 							var panoramaOptions = {
 								position: nearStreetViewLocation,
@@ -343,13 +347,17 @@ class App extends Component {
 		
 	}
 	
-	onPress(event){
-		//console.log(event);
+	onPress(i){
+		console.log(i.currentTarget);
+		//console.log(e);
 		//console.log(this.populateInfoWindow);
-		var displaymarker = markers.filter((venue) => venue.id === event.id);
+		//var displaymarker = markers.filter((venue) => venue.id === event.id);
 		//this.state.items.map((venue) =>(
 		//console.log(displaymarker);
-		this.populateInfoWindow(displaymarker[0],largeInfowindow);
+		//this.populateInfoWindow(displaymarker[0],largeInfowindow);
+		//e.target.element.class="newGreenColor";
+		i.currentTarget.classList.add('active');
+	
 	}
 	
 	populateInfoWindow(marker, infowindow) {
@@ -372,7 +380,7 @@ class App extends Component {
 							var heading = google.maps.geometry.spherical.computeHeading(
 								nearStreetViewLocation, marker.position);
 							//console.log(heading);
-							infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
+							infowindow.setContent('<div>' + marker.title + '</div>'+ marker.address+'<div id="pano"></div>');
 							//console.log(infowindow);
 							var panoramaOptions = {
 								position: nearStreetViewLocation,
@@ -428,12 +436,12 @@ class App extends Component {
 					<div className='venue-box'>
 						<h3>Places</h3>
 						<ul className='list'>
-						{this.state.items.map((venue) =>(
-							<div key={venue.id}>
-							<li className='venue-list' onClick={() => this.onPress(venue)}>
+						{this.state.items.map((venue,i) =>(
+							<div key={venue.id} onClick={this.onPress.bind(this)}>
+							<ul id={venue.id} className='venue-list' >
 							<h4>{venue.name}</h4>
 							<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
-							</li>
+							</ul>
 							</div>
 						))}
 						</ul>
