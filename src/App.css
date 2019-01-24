@@ -65,7 +65,7 @@ h1 {
 }
 	  
 #hide-listings{
-    width: 70%;
+    width: 50%;
 }
 	
 #show-listings, #lng, #lat{
@@ -137,4 +137,8 @@ hr {
 
 .active{
 	background-color:red;
+}
+
+button{
+	width:50%;
 }

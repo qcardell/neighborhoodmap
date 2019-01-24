@@ -2,24 +2,31 @@ import React, { Component } from 'react';
 import './App.css';
 //import ShowMap from './ShowMap';
 import axios from 'axios'; // ajax stuff similar to jquery but with promises
+import escapeRegExp from 'escape-string-regexp'
+
 
 var foursquare = require('react-foursquare')({
   clientID: '00BVPJHFDPUKMUOTIEO4IGK53GUPTYTMVIMUEKHBIIX3DSZO',
   clientSecret: 'IKB3WGDPXTVPMEUFWZB1GFHHULK0JE3VTGYG1OYMVRO3LNSK'  
 });
 var markers = [];
+let filterMarkers = [];
+//let showingItems;
 var map ;
 var center;
 var marker;
 var google;
 var largeInfowindow;
+var previousElement;
+//var showingItems = [];
 
 class App extends Component {
 	constructor(props) {
 		super(props);
 				this.onPress= this.onPress.bind(this);
 		this.state = {
-			items: []
+			items: [],
+			showingItems:[]
 		};
 	}
 		//componentDidMount() {   
@@ -69,6 +76,9 @@ class App extends Component {
 	}
 	
 	updateQuery = (query) =>{
+		if(previousElement !== undefined){
+			previousElement.classList.remove("active");
+		}
 		var params = {
 			// 40.7413549, lng: -73.9980244
 			//clientID: '00BVPJHFDPUKMUOTIEO4IGK53GUPTYTMVIMUEKHBIIX3DSZO',
@@ -86,10 +96,12 @@ class App extends Component {
 
 		};
 		//this.setState({query: query.trim()})
-		console.log(params);
+		//console.log(params);
+		//Removing the Markers from the map
 		for (var i=0; i<markers.length; i++){
 				markers[i].setMap(null);
 		}
+		
 		markers = [];
 		foursquare.venues.getVenues(params).then((res) => {
 			this.setState({
@@ -102,6 +114,28 @@ class App extends Component {
 		
 	}
 	
+	
+	filterVenues = (query) =>{
+		
+		if(previousElement !== undefined){
+			previousElement.classList.remove("active");
+		}
+		
+		for (var i=0; i<markers.length; i++){
+				markers[i].setMap(null);
+		}
+		
+		markers = [];
+		if(query){
+		const match = new RegExp(escapeRegExp(query), 'i')
+			filterMarkers = this.state.items.filter((venue) => match.test(venue.name))
+		}else{
+			filterMarkers = this.state.items;
+		}
+		//showingmarkers = markers.filter((venue) => venue.id === v.id);
+		console.log(filterMarkers);
+		this.rendermap()
+	}
 	
 	getGoogleMaps() {
     // If we haven't already defined the promise, define it
@@ -154,15 +188,17 @@ class App extends Component {
 		};
 		  
 		//Get 4 square Data.
+		this.rendermapOnly()
 		foursquare.venues.getVenues(params).then((res) => {
 			this.setState({
 				items: res.response.venues
-			}, this.rendermapOnly()
+			},this.rendermap()
 			);
 			//console.log(this.state.items);
+			
 		})
-
 	}
+	
 	
 	rendermapOnly(){
 		this.getGoogleMaps().then((google) => {
@@ -217,14 +253,16 @@ class App extends Component {
 				mapTypeControl: false
 			});
 		})
-		this.rendermap();
+		//this.rendermap();
 	}
 	
 	
 	rendermap(){
 		// Once the Google Maps API has finished loading, initialize the map
+		
 		this.getGoogleMaps().then((google) => {
-			
+			//console.log(this.state.items);
+
 			//const center = {lat: 37.7749, lng: -122.4194};
 				//const center = {lat: 40.7413549, lng: -73.9980244};
 				//37.7749,-122.4194"
@@ -248,7 +286,28 @@ class App extends Component {
 			
 			//var bounds = new google.maps.LatLngBounds();
 			//console.log(this.state.items);
-			this.state.items.map(venue => {
+			//console.log(this.state.items);
+			//console.log(filterMarkers);
+			if(filterMarkers.length === 0){
+				//showingItems=this.state.items;
+				//console.log("state");
+				//this.rendermapOnly();
+				this.setState({
+				showingItems: this.state.items
+			});
+
+			}else{
+				//showingItems = filterMarkers;
+				//console.log("filter");
+				//this.rendermapOnly();
+				this.setState({
+				showingItems: filterMarkers
+			});
+
+			}
+
+			//console.log(showingItems);
+			this.state.showingItems.map(venue => {
 			//for (var i=0; i < locations.length; i++) {
 				//location: {lat: 40.7713024, lng: -73.9632393}
 				//var position = locations[i].location;
@@ -347,16 +406,20 @@ class App extends Component {
 		
 	}
 	
-	onPress(i){
+	onPress(v,i){
 		console.log(i.currentTarget);
+		if(previousElement !== "" && previousElement !== undefined){
+			previousElement.classList.remove("active");
+		}
 		//console.log(e);
 		//console.log(this.populateInfoWindow);
-		//var displaymarker = markers.filter((venue) => venue.id === event.id);
+		var displaymarker = markers.filter((venue) => venue.id === v.id);
 		//this.state.items.map((venue) =>(
 		//console.log(displaymarker);
-		//this.populateInfoWindow(displaymarker[0],largeInfowindow);
+		this.populateInfoWindow(displaymarker[0],largeInfowindow);
 		//e.target.element.class="newGreenColor";
 		i.currentTarget.classList.add('active');
+		previousElement = i.currentTarget;
 	
 	}
 	
@@ -411,20 +474,37 @@ class App extends Component {
 				<div className='options-box'>
 					<h1>Options Menu</h1>
 					<div>
-						<span>Filter  </span>
-						<input 
-							id="hide-listings" 
-							type="text" 
-							placeholder='Search: ex Food'
-							onBlur={(event) => this.updateQuery(event.target.value)}
-						>
-						</input>
-						<input 
-							id="hide-listings" 
-							type="button" 
-							value="Search"
-							onChange={(event) => this.updateQuery(event.target.value)}>
-						</input>
+						<div>
+							<span>search </span>
+							<input 
+								id="hide-listings" 
+								type="text" 
+								placeholder='Search: ex Food'
+								onBlur={(event) => this.updateQuery(event.target.value)}
+							/>
+							
+							<input 
+								id="searchButton" 
+								type="button" 
+								value="Search"
+							/>
+						</div>
+
+						<div>
+							<span>Filter </span>
+							<input 
+								id="hide-listings" 
+								type="text" 
+								placeholder='Search: ex Food'
+								onBlur={(event) => this.filterVenues(event.target.value)}
+							/>
+							<input 
+								id="searchButton" 
+								type="button" 
+								value="Search"
+							/>
+						</div>
+						
 					</div>
 					<div>
 						<span>Lat: </span>
@@ -436,8 +516,8 @@ class App extends Component {
 					<div className='venue-box'>
 						<h3>Places</h3>
 						<ul className='list'>
-						{this.state.items.map((venue,i) =>(
-							<div key={venue.id} onClick={this.onPress.bind(this)}>
+						{this.state.showingItems.map((venue,i) =>(
+							<div key={venue.id} onClick={this.onPress.bind(this,venue)}>
 							<ul id={venue.id} className='venue-list' >
 							<h4>{venue.name}</h4>
 							<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
