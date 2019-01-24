@@ -13,6 +13,7 @@ var center;
 var marker;
 var google;
 var largeInfowindow;
+var previousLI;
 
 class App extends Component {
 	constructor(props) {
@@ -347,15 +348,20 @@ class App extends Component {
 		
 	}
 	
-	onPress(i){
+	onPress(v,i){
+		console.log(v);
 		console.log(i.currentTarget);
+		if(previousLI !== "" & previousLI!== undefined){
+			//console.log(previousLI.currentTarget);
+			previousLI.classList.remove('active');
+		}
 		//console.log(e);
 		//console.log(this.populateInfoWindow);
-		//var displaymarker = markers.filter((venue) => venue.id === event.id);
+		var displaymarker = markers.filter((venue) => venue.id === v.id);
 		//this.state.items.map((venue) =>(
 		//console.log(displaymarker);
-		//this.populateInfoWindow(displaymarker[0],largeInfowindow);
-		//e.target.element.class="newGreenColor";
+		this.populateInfoWindow(displaymarker[0],largeInfowindow);
+		previousLI = i.currentTarget;
 		i.currentTarget.classList.add('active');
 	
 	}
@@ -437,7 +443,7 @@ class App extends Component {
 						<h3>Places</h3>
 						<ul className='list'>
 						{this.state.items.map((venue,i) =>(
-							<div key={venue.id} onClick={this.onPress.bind(this)}>
+							<div key={venue.id} onClick={this.onPress.bind(this,venue)}>
 							<ul id={venue.id} className='venue-list' >
 							<h4>{venue.name}</h4>
 							<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
