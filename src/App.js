@@ -33,8 +33,11 @@ class App extends Component {
 			error: false,
 			info: null,
 			windowHeight: undefined,
-			windowWidth: undefined
-
+			windowWidth: undefined,
+			googleApiERROR: [
+				{name:'Error loading page please check Google API key, and check console for more info'}
+				],
+			fourSquareERROR: [] 
 		};
 	}
 		
@@ -103,6 +106,7 @@ class App extends Component {
 	
 	getGoogleMaps() {
     // If we haven't already defined the promise, define it
+	//console.log(!this.googleMapsPromise);
 		if (!this.googleMapsPromise) {
 		  this.googleMapsPromise = new Promise((resolve) => {
 			// Add a global handler for when the API finishes loading
@@ -122,6 +126,12 @@ class App extends Component {
 			script.async = true;
 			document.body.appendChild(script);
 		  });
+		}else{
+			//document.getElementById('errorMessage').text = "Error loading page";
+			console.log('ERROR loading the GOOGLE API.  Please check your keys');
+			this.setState({
+				showingItems: this.state.googleApiERROR
+			})
 		}
 
     // Return a promise for the Google Maps API
@@ -153,7 +163,7 @@ class App extends Component {
 			);			
 		})
 		.catch(error => {
-				console.log("ERRORQQQQQQQQQQQQQQQQQQQQQQQQ!! " + error)
+				console.log("foursquare ERROR!! " + error)
 				this.setState({
 				showingItems: []
 			});
@@ -372,9 +382,9 @@ class App extends Component {
 	}
 
 	render() {
-		 if (this.state.showingItems === undefined) {
+		 if (this.state.showingItems === undefined || this.state.showingItems.formattedAddress === undefined) {
 			// You can render any custom fallback UI
-			return <h1>Sorry, Something went wrong.</h1>;
+			return <h1>Sorry, Something went wrong.  Please check console for more information{this.state.googleApiERROR.name}</h1>;
 		}	
 			return (
 				<div className="App">
@@ -420,6 +430,7 @@ class App extends Component {
 							<span>  Lng: </span>
 							<input id="lng" type="input" ></input>
 						</div>
+						<div><p id='errorMessage'>ERROR:</p></div>
 					</div>
 						<div className='venue-box'>
 							<h3>Places</h3>
