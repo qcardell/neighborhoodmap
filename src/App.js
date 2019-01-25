@@ -2,25 +2,37 @@ import React, { Component } from 'react';
 import './App.css';
 //import ShowMap from './ShowMap';
 import axios from 'axios'; // ajax stuff similar to jquery but with promises
+import escapeRegExp from 'escape-string-regexp'
+
 
 var foursquare = require('react-foursquare')({
   clientID: '00BVPJHFDPUKMUOTIEO4IGK53GUPTYTMVIMUEKHBIIX3DSZO',
   clientSecret: 'IKB3WGDPXTVPMEUFWZB1GFHHULK0JE3VTGYG1OYMVRO3LNSK'  
 });
 var markers = [];
+let filterMarkers = [];
+//let showingItems;
 var map ;
 var center;
 var marker;
 var google;
 var largeInfowindow;
-var previousLI;
+var previousElement;
+var previouswidth;
+//var showingItems = [];
 
 class App extends Component {
 	constructor(props) {
 		super(props);
 				this.onPress= this.onPress.bind(this);
 		this.state = {
-			items: []
+			items: [],
+			showingItems:[],
+			error: false,
+			info: null,
+			windowHeight: undefined,
+			windowWidth: undefined
+
 		};
 	}
 		//componentDidMount() {   
@@ -34,6 +46,31 @@ class App extends Component {
 			//console.log(this.state);
 		//}
 	
+	componentDidCatch(error, info) {
+    // Something happened to one of my children.
+    // Add error to state
+		this.setState({
+			error: error,
+			info: info,
+		});
+	}
+	
+	handleResize = () =>{
+		//this.setState({
+		//windowHeight: window.innerHeight,
+		//windowWidth: window.innerWidth
+		//});
+		//console.log(window.innerWidth);
+			if(window.innerWidth > 801 && previouswidth < 801){
+				this.rendermapOnly();
+				this.rendermap();
+				//console.log("render");
+			}
+			previouswidth=window.innerWidth;
+
+	}
+
+
 	getVenues = () => {
 		const endPoint = "https://api.foursquare.com/v2/venues/explore?";
 		var params = {
@@ -73,6 +110,11 @@ class App extends Component {
 	}
 	
 	updateQuery = (query) =>{
+		document.getElementById('filter-listings').value = "";
+		filterMarkers = []
+		if(previousElement !== undefined){
+			previousElement.classList.remove("active");
+		}
 		var params = {
 			// 40.7413549, lng: -73.9980244
 			//clientID: '00BVPJHFDPUKMUOTIEO4IGK53GUPTYTMVIMUEKHBIIX3DSZO',
@@ -90,10 +132,12 @@ class App extends Component {
 
 		};
 		//this.setState({query: query.trim()})
-		console.log(params);
+		//console.log(params);
+		//Removing the Markers from the map
 		for (var i=0; i<markers.length; i++){
 				markers[i].setMap(null);
 		}
+		
 		markers = [];
 		foursquare.venues.getVenues(params).then((res) => {
 			this.setState({
@@ -106,6 +150,28 @@ class App extends Component {
 		
 	}
 	
+	
+	filterVenues = (query) =>{
+		
+		if(previousElement !== undefined){
+			previousElement.classList.remove("active");
+		}
+		
+		for (var i=0; i<markers.length; i++){
+				markers[i].setMap(null);
+		}
+		
+		markers = [];
+		if(query){
+		const match = new RegExp(escapeRegExp(query), 'i')
+			filterMarkers = this.state.items.filter((venue) => match.test(venue.name))
+		}else{
+			filterMarkers = this.state.items;
+		}
+		//showingmarkers = markers.filter((venue) => venue.id === v.id);
+		console.log(filterMarkers);
+		this.rendermap()
+	}
 	
 	getGoogleMaps() {
     // If we haven't already defined the promise, define it
@@ -136,11 +202,17 @@ class App extends Component {
 
   componentWillMount() {
     // Start Google Maps API loading since we know we'll soon need it
+	window.removeEventListener('resize', this.handleResize)
     this.getGoogleMaps();
   }
 
   componentDidMount() {
-	  
+		previouswidth=window.innerWidth;
+		this.handleResize();
+		window.addEventListener('resize', this.handleResize)
+		
+		console.log(this.state.windowWidth);
+
 		var params = {
 			// 40.7413549, lng: -73.9980244
 			//clientID: '00BVPJHFDPUKMUOTIEO4IGK53GUPTYTMVIMUEKHBIIX3DSZO',
@@ -158,18 +230,23 @@ class App extends Component {
 		};
 		  
 		//Get 4 square Data.
+		this.rendermapOnly()
 		foursquare.venues.getVenues(params).then((res) => {
 			this.setState({
 				items: res.response.venues
-			}, this.rendermapOnly()
+			},this.rendermap()
 			);
 			//console.log(this.state.items);
+			
 		})
 		.catch(error => {
-				console.log("ERROR!! " + error)
+				console.log("ERRORQQQQQQQQQQQQQQQQQQQQQQQQ!! " + error)
+				this.setState({
+				showingItems: []
+			});
 		})
-
 	}
+	
 	
 	rendermapOnly(){
 		this.getGoogleMaps().then((google) => {
@@ -217,6 +294,8 @@ class App extends Component {
 			center = {lat: 37.7749, lng: -122.4194};
 				//const center = {lat: 40.7413549, lng: -73.9980244};
 				//37.7749,-122.4194"
+			document.getElementById('lat').value = center.lat;
+			document.getElementById('lng').value = center.lng;
 			this.map = new google.maps.Map(document.getElementById('map'), {
 				zoom: 13,
 				center: center,
@@ -224,14 +303,16 @@ class App extends Component {
 				mapTypeControl: false
 			});
 		})
-		this.rendermap();
+		//this.rendermap();
 	}
 	
 	
 	rendermap(){
 		// Once the Google Maps API has finished loading, initialize the map
+		
 		this.getGoogleMaps().then((google) => {
-			
+			//console.log(this.state.items);
+
 			//const center = {lat: 37.7749, lng: -122.4194};
 				//const center = {lat: 40.7413549, lng: -73.9980244};
 				//37.7749,-122.4194"
@@ -255,7 +336,28 @@ class App extends Component {
 			
 			//var bounds = new google.maps.LatLngBounds();
 			//console.log(this.state.items);
-			this.state.items.map(venue => {
+			//console.log(this.state.items);
+			//console.log(filterMarkers);
+			if(filterMarkers.length === 0){
+				//showingItems=this.state.items;
+				//console.log("state");
+				//this.rendermapOnly();
+				this.setState({
+				showingItems: this.state.items
+			});
+
+			}else{
+				//showingItems = filterMarkers;
+				//console.log("filter");
+				//this.rendermapOnly();
+				this.setState({
+				showingItems: filterMarkers
+			});
+
+			}
+
+			//console.log(showingItems);
+			this.state.showingItems.map(venue => {
 			//for (var i=0; i < locations.length; i++) {
 				//location: {lat: 40.7713024, lng: -73.9632393}
 				//var position = locations[i].location;
@@ -355,11 +457,9 @@ class App extends Component {
 	}
 	
 	onPress(v,i){
-		//console.log(v);
-		//console.log(i.currentTarget);
-		if(previousLI !== "" & previousLI!== undefined){
-			//console.log(previousLI.currentTarget);
-			previousLI.classList.remove('active');
+		console.log(i.currentTarget);
+		if(previousElement !== "" && previousElement !== undefined){
+			previousElement.classList.remove("active");
 		}
 		//console.log(e);
 		//console.log(this.populateInfoWindow);
@@ -367,8 +467,9 @@ class App extends Component {
 		//this.state.items.map((venue) =>(
 		//console.log(displaymarker);
 		this.populateInfoWindow(displaymarker[0],largeInfowindow);
-		previousLI = i.currentTarget;
+		//e.target.element.class="newGreenColor";
 		i.currentTarget.classList.add('active');
+		previousElement = i.currentTarget;
 	
 	}
 	
@@ -418,51 +519,73 @@ class App extends Component {
 	}
 
 	render() {
-		return (
-			<div className="App">
-				<div className='options-box'>
-					<h1>Options Menu</h1>
-					<div>
-						<span>Filter  </span>
-						<input 
-							id="hide-listings" 
-							type="text" 
-							placeholder='Search: ex Food'
-							onBlur={(event) => this.updateQuery(event.target.value)}
-						>
-						</input>
-						<input 
-							id="hide-listings" 
-							type="button" 
-							value="Search"
-							onChange={(event) => this.updateQuery(event.target.value)}>
-						</input>
-					</div>
-					<div>
-						<span>Lat: </span>
-						<input id="lat" type="input" ></input>
-						<span>  Lng: </span>
-						<input id="lng" type="input" ></input>
-					</div>
-					<div id="Error" className="hide">Error Loading Page, please refresh!!!</div>
-				</div>
-					<div className='venue-box'>
-						<h3>Places</h3>
-						<ul className='list'>
-						{this.state.items.map((venue,i) =>(
-							<div key={venue.id} onClick={this.onPress.bind(this,venue)}>
-							<ul id={venue.id} className='venue-list' >
-							<h4>{venue.name}</h4>
-							<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
-							</ul>
+		 if (this.state.showingItems === undefined) {
+			// You can render any custom fallback UI
+			return <h1>Sorry, Something went wrong.</h1>;
+		}	
+			return (
+				<div className="App">
+					<div id='map'></div>
+					<div className='options-box'>
+					{this.state.windowWidth} x {this.state.windowHeight}
+						<h1>Options Menu</h1>
+						<div>
+							<div>
+								<span>search </span>
+								<input 
+									id="search-listings" 
+									type="text" 
+									placeholder='Search: ex Food'
+									onBlur={(event) => this.updateQuery(event.target.value)}
+								/>
+								
+								<input 
+									id="searchButton" 
+									type="button" 
+									value="Search"
+								/>
 							</div>
-						))}
-						</ul>
 
+							<div>
+								<span>Filter </span>
+								<input 
+									id="filter-listings" 
+									type="text" 
+									placeholder='Search: ex Food'
+									onBlur={(event) => this.filterVenues(event.target.value)}
+								/>
+								<input 
+									id="searchButton" 
+									type="button" 
+									value="Search"
+								/>
+							</div>
+							
+						</div>
+						<div>
+							<span>Lat: </span>
+							<input id="lat" type="input" ></input>
+							<span>  Lng: </span>
+							<input id="lng" type="input" ></input>
+						</div>
 					</div>
-				<div id='map'></div>
-			</div>
-		);
+						<div className='venue-box'>
+							<h3>Places</h3>
+							<ul className='list'>
+							{this.state.showingItems.map((venue,i) =>(
+								<div key={venue.id} onClick={this.onPress.bind(this,venue)}>
+								<ul id={venue.id} className='venue-list' >
+								<h4>{venue.name}</h4>
+								<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
+								</ul>
+								</div>
+							))}
+							</ul>
+
+						</div>
+				</div>
+			);
+
 	}
 }
 
