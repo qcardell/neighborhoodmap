@@ -145,6 +145,7 @@ class App extends Component {
   }
 
   componentDidMount() {
+
 		previouswidth=window.innerWidth;
 		this.handleResize();
 		window.addEventListener('resize', this.handleResize)
@@ -229,7 +230,13 @@ class App extends Component {
 	
 	rendermap(){
 		// Once the Google Maps API has finished loading, initialize the map
-		
+		document.getElementById('search-listings').tabIndex = 1;
+		document.getElementById('searchButton').tabIndex = 2;
+		document.getElementById('filter-listings').tabIndex = 3;
+		document.getElementById('filterButton').tabIndex = 4;
+		document.getElementById('lat').tabIndex = -1;
+		document.getElementById('lng').tabIndex = -1;
+		document.getElementById('venue-list').tabIndex = 5;
 		this.getGoogleMaps().then((google) => {
 			largeInfowindow = new google.maps.InfoWindow();
 		
@@ -417,7 +424,7 @@ class App extends Component {
 									onBlur={(event) => this.filterVenues(event.target.value)}
 								/>
 								<input 
-									id="searchButton" 
+									id="filterButton" 
 									type="button" 
 									value="Search"
 								/>
@@ -437,7 +444,7 @@ class App extends Component {
 							<ul className='list'>
 							{this.state.showingItems.map((venue,i) =>(
 								<div key={venue.id} onClick={this.onPress.bind(this,venue)}>
-								<ul id={venue.id} className='venue-list' >
+								<ul id='venue-list' className='venue-list' >
 								<h4>{venue.name}</h4>
 								<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
 								</ul>
