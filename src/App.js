@@ -66,6 +66,9 @@ class App extends Component {
 			});
 			//console.log(this.state);
 		})
+		.catch(error => {
+				console.log("ERROR!! " + error)
+		})
 		//console.log(this.state.items);
 	}
 	
@@ -162,6 +165,9 @@ class App extends Component {
 			);
 			//console.log(this.state.items);
 		})
+		.catch(error => {
+				console.log("ERROR!! " + error)
+		})
 
 	}
 	
@@ -254,7 +260,7 @@ class App extends Component {
 				//location: {lat: 40.7713024, lng: -73.9632393}
 				//var position = locations[i].location;
 				var position = {lat: venue.location.lat,lng:venue.location.lng};
-
+				
 				var title = venue.name; //locations[i].title;
 				
 				marker = new google.maps.Marker({
@@ -349,8 +355,8 @@ class App extends Component {
 	}
 	
 	onPress(v,i){
-		console.log(v);
-		console.log(i.currentTarget);
+		//console.log(v);
+		//console.log(i.currentTarget);
 		if(previousLI !== "" & previousLI!== undefined){
 			//console.log(previousLI.currentTarget);
 			previousLI.classList.remove('active');
@@ -438,6 +444,7 @@ class App extends Component {
 						<span>  Lng: </span>
 						<input id="lng" type="input" ></input>
 					</div>
+					<div id="Error" className="hide">Error Loading Page, please refresh!!!</div>
 				</div>
 					<div className='venue-box'>
 						<h3>Places</h3>

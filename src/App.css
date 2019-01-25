@@ -138,3 +138,7 @@ hr {
 .active{
 	background-color:red;
 }
+
+.hide{
+	display:none;
+}
