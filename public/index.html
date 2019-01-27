@@ -37,5 +37,13 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+ <script>
+window.gm_authFailure = function() {
+    // remove the map div or maybe call another API to load map
+   // maybe display a useful message to the user
+   alert('Google maps failed to load! Please check your Key');
+   console.log("Google maps failed to load!");
+}
+    </script>
   </body>
 </html>

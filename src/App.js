@@ -13,6 +13,7 @@ var foursquare = require('react-foursquare')({
 const API = '';
 //Google map key
 
+var highlightedIcon;
 var markers = [];
 let filterMarkers = [];
 var map ;
@@ -22,6 +23,8 @@ var google;
 var largeInfowindow;
 var previousElement;
 var previouswidth;
+var previousmarker;
+var defaultIcon;
 
 class App extends Component {
 	constructor(props) {
@@ -40,7 +43,11 @@ class App extends Component {
 			fourSquareERROR: [] 
 		};
 	}
-		
+	
+	gm_authFailure = () => {
+		      alert("Google Map authentication failed, use valid API key");
+	}
+	
 	componentDidCatch(error, info) {
 		this.setState({
 			error: error,
@@ -77,9 +84,9 @@ class App extends Component {
 				items: res.response.venues
 			},this.rendermap()
 			)
-		})
-		
-		
+		}).catch(error => {
+				alert("foursquare ERROR!! " + error);
+			});
 	}
 	
 	
@@ -100,7 +107,7 @@ class App extends Component {
 		}else{
 			filterMarkers = this.state.items;
 		}
-		console.log(filterMarkers);
+		//console.log(filterMarkers);
 		this.rendermap()
 	}
 	
@@ -125,25 +132,46 @@ class App extends Component {
 			script.src = `https://maps.googleapis.com/maps/api/js?key=${API}&callback=resolveGoogleMapsPromise`;
 			script.async = true;
 			document.body.appendChild(script);
+			
+			function gm_authFailure() {
+    alert("Google Map authorization error. Please try refreshing the page.");
+}
 		  });
-		}else{
+		//}else{
 			//document.getElementById('errorMessage').text = "Error loading page";
-			console.log('ERROR loading the GOOGLE API.  Please check your keys');
-			this.setState({
-				showingItems: this.state.googleApiERROR
-			})
+			//console.log('ERROR loading the GOOGLE API.  Please check your keys');
+			//this.setState({
+			//	showingItems: this.state.googleApiERROR
+			//})
 		}
+		
+
 
     // Return a promise for the Google Maps API
 		return this.googleMapsPromise;
 	}
 
+		gm_authFailure = () =>{
+    alert("Google Map authorization error. Please try refreshing the page.");
+}
   componentWillMount() {
     // Start Google Maps API loading since we know we'll soon need it
 	window.removeEventListener('resize', this.handleResize)
     this.getGoogleMaps();
   }
-
+  
+  componentDidUpdate() {
+  		if(document.getElementById('venuelist') !== undefined && document.getElementById('venuelist') !== null){
+			//console.log(document.getElementById('venuelist'));
+			let alllis = document.querySelectorAll('#venuelist');
+			for(let i=0;i<alllis.length;i++){
+				alllis[i].tabIndex = 5;
+			}
+		
+			//document.getElementById('venuelist').tabIndex = 5;
+		}
+  }
+  
   componentDidMount() {
 
 		previouswidth=window.innerWidth;
@@ -164,11 +192,17 @@ class App extends Component {
 			);			
 		})
 		.catch(error => {
-				console.log("foursquare ERROR!! " + error)
-				this.setState({
-				showingItems: []
-			});
+				alert("foursquare ERROR!! " + error)
 		})
+		
+				
+		document.getElementById('search-listings').tabIndex = 1;
+		document.getElementById('searchButton').tabIndex = 2;
+		document.getElementById('filter-listings').tabIndex = 3;
+		document.getElementById('filterButton').tabIndex = 4;
+		document.getElementById('lat').tabIndex = -1;
+		document.getElementById('lng').tabIndex = -1;
+
 	}
 	
 	
@@ -229,20 +263,16 @@ class App extends Component {
 	
 	
 	rendermap(){
+		
+
 		// Once the Google Maps API has finished loading, initialize the map
-		document.getElementById('search-listings').tabIndex = 1;
-		document.getElementById('searchButton').tabIndex = 2;
-		document.getElementById('filter-listings').tabIndex = 3;
-		document.getElementById('filterButton').tabIndex = 4;
-		document.getElementById('lat').tabIndex = -1;
-		document.getElementById('lng').tabIndex = -1;
-		document.getElementById('venue-list').tabIndex = 5;
+
 		this.getGoogleMaps().then((google) => {
 			largeInfowindow = new google.maps.InfoWindow();
 		
-			var defaultIcon = makeMarkerIcon('0091ff');
+			defaultIcon = makeMarkerIcon('0091ff');
 		
-			var highlightedIcon = makeMarkerIcon('FFFF24');
+			highlightedIcon = makeMarkerIcon('FFFF24');
 		
 			if(filterMarkers.length === 0){
 				this.setState({
@@ -255,11 +285,12 @@ class App extends Component {
 				});
 			}
 
-			if(this.state.showingItems === undefined){
-				this.setState({
-					showingItems: []
-				});
-			}
+			//if(this.state.showingItems === undefined){
+			//	this.setState({
+			//		showingItems: []
+			//	});
+			//}
+			if(this.state.showingItems !== undefined){
 			this.state.showingItems.map(venue => {
 				var position = {lat: venue.location.lat,lng:venue.location.lng};
 				
@@ -282,14 +313,14 @@ class App extends Component {
 				});
 				
 				marker.addListener('mouseover', function(){
+					console.log(this.setIcon);
 					this.setIcon(highlightedIcon);
 				});
 				marker.addListener('mouseout', function(){
 					this.setIcon(defaultIcon);
 				});
 			})
-			
-			
+			}
 			function populateInfoWindow(marker, infowindow) {
 					infowindow.setContent('');
 					infowindow.marker = marker;
@@ -338,17 +369,24 @@ class App extends Component {
 					return markerImage;
 			}
 		});
-		
+
 	}
 	
 	onPress(v,i){
 		if(previousElement !== "" && previousElement !== undefined){
 			previousElement.classList.remove("active");
 		}
+		
+		if(previousmarker !== "" && previousmarker !== undefined){
+			previousmarker.setIcon(defaultIcon);
+		}
 		var displaymarker = markers.filter((venue) => venue.id === v.id);
 		this.populateInfoWindow(displaymarker[0],largeInfowindow);
+		console.log(displaymarker);
+		displaymarker[0].setIcon(highlightedIcon);
 		i.currentTarget.classList.add('active');
 		previousElement = i.currentTarget;
+		previousmarker = displaymarker[0];
 	
 	}
 	
@@ -389,13 +427,13 @@ class App extends Component {
 	}
 
 	render() {
-		 if (this.state.showingItems === undefined || this.state.showingItems.formattedAddress === undefined) {
+		 if (this.state.showingItems === undefined) {
 			// You can render any custom fallback UI
-			return <h1>Sorry, Something went wrong.  Please check console for more information{this.state.googleApiERROR.name}</h1>;
+			return <h1>Sorry, Something went wrong.  Please check your foursquare keys</h1>;
 		}	
 			return (
 				<div className="App">
-					<div id='map'></div>
+					<div role="application" aria-label="Location" id='map'></div>
 					<div className='options-box'>
 						<h1>Options Menu</h1>
 						<div>
@@ -437,17 +475,17 @@ class App extends Component {
 							<span>  Lng: </span>
 							<input id="lng" type="input" ></input>
 						</div>
-						<div><p id='errorMessage'>ERROR:</p></div>
+						<div><p id='errorMessage' className='hidden'>ERROR:</p></div>
 					</div>
-						<div className='venue-box'>
+						<div id="venue-box" className='venue-box'>
 							<h3>Places</h3>
 							<ul className='list'>
 							{this.state.showingItems.map((venue,i) =>(
-								<div key={venue.id} onClick={this.onPress.bind(this,venue)}>
-								<ul id='venue-list' className='venue-list' >
-								<h4>{venue.name}</h4>
-								<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
-								</ul>
+								<div id="venue" key={venue.id} onClick={this.onPress.bind(this,venue)}>
+									<li role="application" aria-label="Venues" aria-labelledby="venue-box venue" id='venuelist'>
+										<h4>{venue.name}</h4>
+										<p>{venue.location.formattedAddress[0]} {" "} {venue.location.formattedAddress[1]}</p>
+									</li>
 								</div>
 							))}
 							</ul>
